@@ -36,8 +36,7 @@ export function BatteryWarning() {
   // Only once the settings are read from disk: before that `batteryWarning` is
   // its default (on), and someone who had turned it off would see it anyway.
   useEffect(() => {
-    if (!hydrated || !enabled) return;
-    if (asked || !isBatteryOptimized()) return;
+    if (asked || !hydrated || !enabled || !isBatteryOptimized()) return;
     asked = true;
     setVisible(true);
   }, [hydrated, enabled]);
@@ -55,7 +54,7 @@ export function BatteryWarning() {
 
   return (
     <Dialog
-      visible={visible && hydrated && enabled}
+      visible={visible}
       title={t('Battery optimization is on')}
       message={t(
         'Android may stop playback in the background, interrupt downloads or delay the sleep timer. Allowing unrestricted battery use fixes it.',

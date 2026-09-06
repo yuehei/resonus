@@ -47,9 +47,9 @@ import {
 } from '@/api/backend';
 // The data layer's, not the backend's: `getRandomSongs` honours the library
 // filter and asks each library for its share (the rest of the mix cannot be
-// filtered, see `radioCandidates`), and `songCoverUrl` hands back the file on
+// filtered, see `radioCandidates`), and `coverArtUrl` hands back the file on
 // disk when the album is downloaded instead of an address on the server.
-import { COVER, getRandomSongs, songCoverUrl } from '@/api/data';
+import { COVER, coverArtUrl, getRandomSongs } from '@/api/data';
 import { prefetchLyrics } from '@/hooks/useLyrics';
 import { tg } from '@/i18n';
 import type { Remap } from '@/lib/navidromeRemap';
@@ -577,11 +577,7 @@ function seekActive(sec: number) {
 function artworkUrlFor(song: Song): string | undefined {
   // A radio has no album to fall back to, but the server may hold an image for
   // the station, and one picked on the device arrives as a file:// path.
-  const uri = songCoverUrl(song, COVER.card);
-  // Native Metadata casts this to java.net.URL. Cache-only markers (and
-  // content/data URIs) are not URLs it can consume; never unwrap a cache-only
-  // marker into a network request while offline. Downloaded file:// art works.
-  return uri && /^(https?:\/\/|file:\/\/)/i.test(uri) ? uri : undefined;
+  return coverArtUrl(song.coverArt ?? (song.url ? undefined : song.albumId), COVER.card);
 }
 
 /**
