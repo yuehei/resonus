@@ -56,10 +56,10 @@ export function useT(): TFunction {
  * languages like Russian (one/few/many).
  */
 const PLURALS: Record<string, Partial<Record<Language, string[]>>> = {
-  song: { es: ['canción', 'canciones'], en: ['song', 'songs'], de: ['Titel', 'Titel'], ca: ['cançó', 'cançons'], ru: ['композиция', 'композиции', 'композиций'], it: ['canzone', 'canzoni'], uk: ['пісня', 'пісні', 'пісень'] },
-  album: { es: ['álbum', 'álbumes'], en: ['album', 'albums'], de: ['Album', 'Alben'], ca: ['àlbum', 'àlbums'], ru: ['альбом', 'альбома', 'альбомов'], it: ['album', 'album'], uk: ['альбом', 'альбоми', 'альбомів'] },
-  playlist: { es: ['lista', 'listas'], en: ['playlist', 'playlists'], de: ['Playlist', 'Playlists'], ca: ['llista', 'llistes'], ru: ['плейлист', 'плейлиста', 'плейлистов'], it: ['playlist', 'playlist'], uk: ['плейлист', 'плейлисти', 'плейлистів'] },
-  artist: { es: ['artista', 'artistas'], en: ['artist', 'artists'], ca: ['artista', 'artistes'], uk: ['виконавець', 'виконавці', 'виконавців'] },
+  song: { es: ['canción', 'canciones'], en: ['song', 'songs'], de: ['Titel', 'Titel'], ca: ['cançó', 'cançons'], ru: ['композиция', 'композиции', 'композиций'], it: ['canzone', 'canzoni'], uk: ['пісня', 'пісні', 'пісень'], 'zh-CN': ['首歌曲', '首歌曲'] },
+  album: { es: ['álbum', 'álbumes'], en: ['album', 'albums'], de: ['Album', 'Alben'], ca: ['àlbum', 'àlbums'], ru: ['альбом', 'альбома', 'альбомов'], it: ['album', 'album'], uk: ['альбом', 'альбоми', 'альбомів'], 'zh-CN': ['张专辑', '张专辑'] },
+  playlist: { es: ['lista', 'listas'], en: ['playlist', 'playlists'], de: ['Playlist', 'Playlists'], ca: ['llista', 'llistes'], ru: ['плейлист', 'плейлиста', 'плейлистов'], it: ['playlist', 'playlist'], uk: ['плейлист', 'плейлисти', 'плейлистів'], 'zh-CN': ['个播放列表', '个播放列表'] },
+  artist: { es: ['artista', 'artistas'], en: ['artist', 'artists'], ca: ['artista', 'artistes'], uk: ['виконавець', 'виконавці', 'виконавців'], 'zh-CN': ['位艺术家', '位艺术家'] },
 };
 
 /**
