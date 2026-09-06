@@ -47,6 +47,9 @@ const STORAGE_KEY = 'resonus.settings';
 // Language is GLOBAL (app-wide, not per profile): with the reset on profile
 // switch, making it per-profile would set English on every new account.
 const LANG_KEY = 'resonus.language';
+// Battery restrictions belong to the device, regardless of the active profile.
+const BATTERY_WARNING_KEY = 'resonus.batteryWarning';
+let batteryWarningRevision = 0;
 
 /** Settings key for the active profile (server, local, or none). The id is
  *  hashed: SecureStore only accepts [A-Za-z0-9._-] and the URL contains `:`, `/`, `|`. */
@@ -1502,7 +1505,9 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
 
   setBatteryWarning: (batteryWarning) => {
+    batteryWarningRevision++;
     set({ batteryWarning });
+    void setItem(BATTERY_WARNING_KEY, JSON.stringify(batteryWarning));
     persist(snapshot(get));
   },
 
@@ -1788,8 +1793,8 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
 
   resetToDefaults: () => {
-    // Language is preserved: resetting shouldn't change your language.
-    set({ ...DEFAULTS, language: get().language });
+    // Preserve device-wide preferences when resetting profile settings.
+    set({ ...DEFAULTS, language: get().language, batteryWarning: get().batteryWarning });
     applyAccents(DEFAULT_ACCENT, DEFAULT_ACCENT);
     applyThemePreference(DEFAULTS.themeMode);
     persist(snapshot(get));
@@ -1798,6 +1803,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
   hydrate: async () => {
     const key = settingsKey();
     const token = scope.start();
+    const batteryRevision = batteryWarningRevision;
     let applied = false;
     // What is in memory belongs to the profile that just left, and this says
     // so until the new one's has been read. It was only ever false on the first
@@ -1811,15 +1817,21 @@ export const useSettings = create<SettingsState>((set, get) => ({
       // default values for the whole read, and anything saved in that window
       // wrote those defaults over the real ones.
       const raw = (await getItem(key)) ?? (await getItem(STORAGE_KEY));
+      const batteryWarning = await getItem(BATTERY_WARNING_KEY);
       // A newer hydration started while we were reading (profile switch, or
       // the saved session arriving on startup): it owns the store now, and
       // applying this would restore the wrong profile's settings.
       if (!scope.accept(token, key)) return;
+      // A switch changed during the read is newer than the stored preference.
+      const applyBatteryWarning = batteryRevision === batteryWarningRevision;
       // Reset to factory (preserving language, which is global): on profile
       // switch it must not inherit the previous profile's settings. Accent and
       // appearance are applied manually because they're side effects (the blob
       // re-applies them if present); the font is reactive and doesn't need it.
-      set({ ...DEFAULTS, language: get().language });
+      set({ ...DEFAULTS, language: get().language, batteryWarning: get().batteryWarning });
+      if (applyBatteryWarning && (batteryWarning === 'true' || batteryWarning === 'false')) {
+        set({ batteryWarning: batteryWarning === 'true' });
+      }
       applyAccents(DEFAULT_ACCENT, DEFAULT_ACCENT);
       applyThemePreference(DEFAULTS.themeMode);
       applied = true;
@@ -2093,7 +2105,7 @@ export const useSettings = create<SettingsState>((set, get) => ({
         if (typeof parsed.showGenreChips === 'boolean') {
           set({ showGenreChips: parsed.showGenreChips });
         }
-        if (typeof parsed.batteryWarning === 'boolean') {
+        if (applyBatteryWarning && batteryWarning === null && typeof parsed.batteryWarning === 'boolean') {
           set({ batteryWarning: parsed.batteryWarning });
         }
         if (typeof parsed.showDiscHeaders === 'boolean') {
@@ -2326,6 +2338,10 @@ export const useSettings = create<SettingsState>((set, get) => ({
           set({ appFont: parsed.appFont });
         }
       }
+      if (applyBatteryWarning && batteryWarning === null) {
+        // Migrate the existing profile preference once, including opt-outs.
+        void setItem(BATTERY_WARNING_KEY, JSON.stringify(get().batteryWarning));
+      }
       // Language: global (not per profile). If not yet saved separately, it is
       // migrated from the old blob (which included it) on first run.
       let lang = await getItem(LANG_KEY);
@@ -2354,13 +2370,15 @@ export const useSettings = create<SettingsState>((set, get) => ({
       // the global language read, must not undo them — and not if a newer
       // hydration has taken over.
       if (!applied && scope.accept(token, key)) {
-        set({ ...DEFAULTS, language: get().language });
+        set({ ...DEFAULTS, language: get().language, batteryWarning: get().batteryWarning });
         applyAccents(DEFAULT_ACCENT, DEFAULT_ACCENT);
         applyThemePreference(DEFAULTS.themeMode);
       }
     } finally {
       // Read or failed, what's in memory is now what this profile gets.
-      set({ hydrated: true });
+      if (scope.accept(token, key) && key === settingsKey()) {
+        set({ hydrated: true });
+      }
       // Here rather than where the value is read, so it is also settled for a
       // profile that saved nothing about it: the measuring starts on, to catch
       // the startup it would otherwise miss, and this is where it is told

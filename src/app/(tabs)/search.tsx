@@ -509,13 +509,18 @@ const styles = themed((colors) => ({
     backgroundColor: colors.surfaceHighlight,
     margin: spacing.lg,
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderRadius: radius.md,
   },
   input: {
     flex: 1,
     color: colors.text,
     fontSize: fontSize.md,
-    paddingVertical: spacing.md,
+    // Keep spacing outside Android's editable text layout so the hint and
+    // entered text share a centered baseline, including CJK fallback fonts.
+    paddingVertical: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: true,
   },
   content: {
     paddingHorizontal: spacing.lg,
